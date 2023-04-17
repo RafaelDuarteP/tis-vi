@@ -5,7 +5,7 @@ import pandas as pd
 dataset = stack_overflow.get_questions()
 responses = []
 for data in dataset:
-    gpt_question = "Generate a python code to answer the following question: " + data['title']
+    gpt_question = "Generate a Java code to answer the following question: " + data['title']
     response = gpt.ask_gpt(gpt_question)
     responses.append({
         'title': data['title'],
