@@ -3,13 +3,14 @@ import pandas as pd
 
 
 def get_questions():
+    QTD_PERGUNTAS = 10
     API_KEY = "l5CGpdxYUIe)fWzFwjwKrw(("
     ACCESS_TOKEN = "V0F6hGzmto2gncuYJ0YiYw))"
 
     API_URL = "https://api.stackexchange.com/2.3/questions"
 
     params = {
-        'pagesize': 10,
+        'pagesize': 100,
         'page': 1,
         'order': 'desc',
         'sort': 'votes',
@@ -26,14 +27,16 @@ def get_questions():
 
     data_set = []
 
-    while len(data_set) < 10:
+    while len(data_set) < QTD_PERGUNTAS:
         try:
             response = requests.get(API_URL, params=params)
             questions = response.json()
             for question in questions['items']:
                 question["answers"] = answers = list(
-                    filter(lambda item: item['is_accepted'], question["answers"]))
-                if len(answers) >= 1 and answers[0]['body'].find('</code>') > -1:
+                    filter(lambda item: item['is_accepted'],
+                           question["answers"]))
+                if len(answers) >= 1 and answers[0]['body'].find(
+                        '</code>') > -1:
                     data_set.append({
                         'title': question['title'],
                         'question_id': question['question_id'],
@@ -46,7 +49,7 @@ def get_questions():
         except Exception as e:
             print('erro', e)
 
-    df = pd.DataFrame(data=data_set)
+    df = pd.DataFrame(data=data_set[:QTD_PERGUNTAS])
     df.to_csv('data_set.csv')
-    print('done')
-    return data_set
+    print('Questions extracted')
+    return data_set[:QTD_PERGUNTAS]

@@ -1,28 +1,22 @@
-import requests
-import json
+import openai
 
 url = 'https://api.openai.com/v1/engines/ada/completions'
-api_key = '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'
+api_key = ''
+
+openai.api_key = api_key
 
 
 def ask_gpt(prompt):
 
-    params = {
-        'prompt': prompt,
-        'max_tokens': 100,
-        'temperature': 0.2,
-        'format': 'text',
-    }
+    response = openai.ChatCompletion.create(model='gpt-3.5-turbo',
+                                            max_tokens=2048,
+                                            n=1,
+                                            stop=None,
+                                            temperature=0.5,
+                                            messages=[{
+                                                'role': 'user',
+                                                'content': prompt
+                                            }])
 
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {api_key}',
-    }
-
-    response = requests.post(url, headers=headers, data=json.dumps(params))
-
-    if response.status_code == 200:
-        response_text = json.loads(response.text)['choices'][0]['text']
-        return response_text
-    else:
-        print(f"Erro {response.status_code}: {response.text}")
+    response_text = response['choices'][0]['message']['content']
+    return response_text
