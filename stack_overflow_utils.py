@@ -1,11 +1,13 @@
 import requests
-import pandas as pd
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
-def get_questions():
-    QTD_PERGUNTAS = 10
-    API_KEY = "l5CGpdxYUIe)fWzFwjwKrw(("
-    ACCESS_TOKEN = "V0F6hGzmto2gncuYJ0YiYw))"
+def get_questions(qtd_perguntas):
+    API_KEY = os.getenv('STACKEXCHANGE_API_KEY')
+    ACCESS_TOKEN = os.getenv('STACKEXCHANGE_ACCESS_TOKEN')
 
     API_URL = "https://api.stackexchange.com/2.3/questions"
 
@@ -25,31 +27,29 @@ def get_questions():
         'access_token': ACCESS_TOKEN,
     }
 
-    data_set = []
+    data = []
 
-    while len(data_set) < QTD_PERGUNTAS:
+    while len(data) < qtd_perguntas:
         try:
             response = requests.get(API_URL, params=params)
             questions = response.json()
             for question in questions['items']:
-                question["answers"] = answers = list(
-                    filter(lambda item: item['is_accepted'],
-                           question["answers"]))
+                answers = [
+                    answer for answer in question['answers']
+                    if answer.get('is_accepted')
+                ]
                 if len(answers) >= 1 and answers[0]['body'].find(
                         '</code>') > -1:
-                    data_set.append({
+                    data.append({
                         'title': question['title'],
                         'question_id': question['question_id'],
                         'answer_id': answers[0]['answer_id'],
                         'question_url': question['link'],
                         'answer_url': answers[0]['link'],
-                        'answer_body': answers[0]['body'],
+                        'answer_stackoverflow': answers[0]['body'],
                     })
             params['page'] += 1
         except Exception as e:
             print('erro', e)
 
-    df = pd.DataFrame(data=data_set[:QTD_PERGUNTAS])
-    df.to_csv('data_set.csv')
-    print('Questions extracted')
-    return data_set[:QTD_PERGUNTAS]
+    return data[:qtd_perguntas]
