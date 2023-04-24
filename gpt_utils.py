@@ -1,9 +1,10 @@
 import openai
+from dotenv import load_dotenv
+import os
 
-url = 'https://api.openai.com/v1/engines/ada/completions'
-api_key = ''
+load_dotenv()
 
-openai.api_key = api_key
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
 def ask_gpt(prompt):
