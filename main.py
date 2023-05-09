@@ -1,6 +1,6 @@
 import gpt_utils as gpt
 import stack_overflow_utils as stack_overflow
-import generate_java_classes as generator
+import calculate_metrics as calc
 import time
 import pandas as pd
 
@@ -18,4 +18,5 @@ for question in questions:
 df = pd.DataFrame(data=responses)
 df.to_csv('responses.csv')
 
-generator.generate_files()
+# Rodar só depois de minerar todos os dados
+# calc.calculate_all()
