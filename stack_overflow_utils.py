@@ -5,7 +5,7 @@ import os
 load_dotenv()
 
 
-def get_questions(qtd_perguntas):
+def get_questions(qtd_perguntas, initial_page):
     API_KEY = os.getenv('STACKEXCHANGE_API_KEY')
     ACCESS_TOKEN = os.getenv('STACKEXCHANGE_ACCESS_TOKEN')
 
@@ -13,7 +13,7 @@ def get_questions(qtd_perguntas):
 
     params = {
         'pagesize': 100,
-        'page': 1,
+        'page': initial_page,
         'order': 'desc',
         'sort': 'votes',
         'tagged': 'java',
@@ -34,10 +34,11 @@ def get_questions(qtd_perguntas):
             response = requests.get(API_URL, params=params)
             questions = response.json()
             for question in questions['items']:
-                answers = [
-                    answer for answer in question['answers']
-                    if answer.get('is_accepted')
-                ]
+                if len(question['answers']) >= 1:
+                    answers = [
+                        answer for answer in question['answers']
+                        if answer.get('is_accepted')
+                    ]
                 if len(answers) >= 1 and answers[0]['body'].find(
                         '</code>') > -1:
                     data.append({
@@ -51,5 +52,6 @@ def get_questions(qtd_perguntas):
             params['page'] += 1
         except Exception as e:
             print('erro', e)
+            params['page'] += 1
 
     return data[:qtd_perguntas]

@@ -26,7 +26,6 @@ def delete_dirs():
         shutil.rmtree(r'metrics', onerror=onerror)
     if os.path.exists(r'files'):
         shutil.rmtree(r'files', onerror=onerror)
-    time.sleep(0.002)
 
 
 def create_dirs():
@@ -34,7 +33,6 @@ def create_dirs():
         os.makedirs(r'metrics')
     if not os.path.exists(r'files'):
         os.makedirs(r'files')
-    time.sleep(0.002)
 
 
 def create_java(name, dir, code_blocks):
@@ -130,16 +128,19 @@ def calculate_all():
 
     delete_dirs()
     for i, row in df.iterrows():
-        create_dirs()
-        html = markdown.markdown(row['answer_chatgpt'],
-                                 extensions=["fenced_code"])
-        soup = BeautifulSoup(html, "html.parser")
-        code_blocks = soup.find_all("code")
-        create_java(name=f'RespostaGPT{i}',
-                    dir='files',
-                    code_blocks=code_blocks)
-        run_tools()
         try:
+            if i % 10 == 0:
+                df.to_csv('responses_final.csv')
+                print(f'salvou {i}:', df)
+            create_dirs()
+            html = markdown.markdown(row['answer_chatgpt'],
+                                     extensions=["fenced_code"])
+            soup = BeautifulSoup(html, "html.parser")
+            code_blocks = soup.find_all("code")
+            create_java(name=f'RespostaGPT{i}',
+                        dir='files',
+                        code_blocks=code_blocks)
+            run_tools()
             loc, comments, cc, npath, cogntive, var_names = get_metrics()
             mi = calcular_mi(loc, cc, var_names)
             df.loc[i, 'loc_gpt'] = loc
@@ -150,19 +151,18 @@ def calculate_all():
             df.loc[i, 'cogntive_gpt'] = cogntive
             df.loc[i, 'var_names_gpt'] = var_names
             df.loc[i, 'mi_gpt'] = mi
-        except Exception as e:
-            print('erro', e)
-        delete_dirs()
 
-        create_dirs()
-        html = row['answer_stackoverflow']
-        soup = BeautifulSoup(html, "html.parser")
-        code_blocks = soup.find_all("code")
-        create_java(name=f'RespostaStackOverflow{i}',
-                    dir='files',
-                    code_blocks=code_blocks)
-        run_tools()
-        try:
+            delete_dirs()
+
+            create_dirs()
+            html = row['answer_stackoverflow']
+            soup = BeautifulSoup(html, "html.parser")
+            code_blocks = soup.find_all("code")
+            create_java(name=f'RespostaStackOverflow{i}',
+                        dir='files',
+                        code_blocks=code_blocks)
+            run_tools()
+
             loc, comments, cc, npath, cogntive, var_names = get_metrics()
             mi = calcular_mi(loc, cc, var_names)
             df.loc[i, 'loc_stackoverflow'] = loc
@@ -177,5 +177,6 @@ def calculate_all():
             print('erro', e)
         delete_dirs()
 
+    df = df.drop(labels=['answer_stackoverflow', 'answer_chatgpt'], axis=1)
     df = df.dropna(how='any')
-    df.to_csv('responses.csv')
+    df.to_csv('responses_final.csv')
